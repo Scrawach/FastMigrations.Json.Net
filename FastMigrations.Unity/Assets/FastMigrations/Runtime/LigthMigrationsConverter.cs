@@ -39,17 +39,17 @@ namespace FastMigrations.Runtime
         private readonly IDictionary<Type, IDictionary<int, MigrateMethod>> _migrateMethodsByType;
         
         /*
-         * Operational complexity (Co) = ???
-         * Architectural complexity (Ca) = inputs + outputs + variables = ???
-         * Cognitive complexity = Co * Ca = ???
+         * Operational complexity (Co) = 15 + 8 + 8 + 1 = 32
+         * Architectural complexity (Ca) = inputs + outputs + variables = 1 + 1 + 0 = 2 (ctor return instance of class)
+         * Cognitive complexity = Co * Ca = 32 * 2 = 64
          */
         public FastMigrationsConverter(MigratorMissingMethodHandling methodHandling)
         {
-            _migrationInProgress = new ThreadLocal<HashSet<Type>>(() => new HashSet<Type>());
-            _attributeByTypeCache = new ConcurrentDictionary<Type, MigratableAttribute>();
-            _migrateMethodsByType = new ConcurrentDictionary<Type, IDictionary<int, MigrateMethod>>();
+            _migrationInProgress = new ThreadLocal<HashSet<Type>>(() => new HashSet<Type>()); // w = 1, seq = 1, func (ctor x2) = 14, W = 1 + 14 = 15  
+            _attributeByTypeCache = new ConcurrentDictionary<Type, MigratableAttribute>(); // w = 1, seq = 1, func = 7, W = 1 + 7 = 8
+            _migrateMethodsByType = new ConcurrentDictionary<Type, IDictionary<int, MigrateMethod>>(); // w = 1, seq = 1, func = 7, W = 1 + 7 = 8
 
-            _methodHandling = methodHandling;
+            _methodHandling = methodHandling; // w = 1, seq = 1, W = 1
         }
 
         /*
