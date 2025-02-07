@@ -200,30 +200,30 @@ namespace FastMigrations.Runtime
         }
 
         /*
-         * Operational complexity (Co) = ???
-         * Architectural complexity (Ca) = inputs + outputs + variables = ???
-         * Cognitive complexity = Co * Ca = ???
+         * Operational complexity (Co) = 61 + 13 + 8 + 8 + 13 + 22 + 1 + 1 = 127
+         * Architectural complexity (Ca) = inputs + outputs + variables = 5 + 1 + 5 = 11 (dict as collection or array equal 3)
+         * Cognitive complexity = Co * Ca = 127 * 11 = 1 397
          */
         private static MigrateMethod GetMigrateMethod(Type objectType, int version, IDictionary<Type, IDictionary<int, MigrateMethod>> cache)
         {
-            if (!cache.TryGetValue(objectType, out IDictionary<int, MigrateMethod> methodsByVersion))
+            if (!cache.TryGetValue(objectType, out IDictionary<int, MigrateMethod> methodsByVersion)) // w = 1, if = 3 * (16+2) = 54, func = 7, W = 54 + 7 = 61
             {
-                methodsByVersion = new ConcurrentDictionary<int, MigrateMethod>();
-                cache[objectType] = methodsByVersion;
+                methodsByVersion = new ConcurrentDictionary<int, MigrateMethod>(); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                cache[objectType] = methodsByVersion; // w = 2, seq = 1, W = 2
             }
 
-            if (methodsByVersion.TryGetValue(version, out MigrateMethod method))
-                return method;
+            if (methodsByVersion.TryGetValue(version, out MigrateMethod method)) // w = 1, if = 3 * 2 = 6, func = 7, W = 6 + 7 = 13
+                return method; // w = 2, seq = 1, W = 2
 
-            var methodName = string.Format(MigratorConstants.MigrateMethodFormat, version);
-            var methodInfo = objectType.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
+            var methodName = string.Format(MigratorConstants.MigrateMethodFormat, version); // w = 1, seq = 1, func = 7, W = 8
+            var methodInfo = objectType.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic); // w = 1, seq = 1, func = 7, W = 8
 
-            if (methodInfo == null)
-                return null;
+            if (methodInfo == null) // w = 1, if = 3 * 2 = 6, func = 7, W = 6 + 7 = 13
+                return null; // w = 2, seq = 1, W = 2
 
-            MigrateMethod newMethodDelegate = (MigrateMethod)methodInfo.CreateDelegate(typeof(MigrateMethod));
-            methodsByVersion[version] = newMethodDelegate;
-            return newMethodDelegate;
+            MigrateMethod newMethodDelegate = (MigrateMethod)methodInfo.CreateDelegate(typeof(MigrateMethod)); // w = 1, seq = 1, func = 7x3 = 21, W = 22
+            methodsByVersion[version] = newMethodDelegate; // w = 1, seq = 1, W = 1
+            return newMethodDelegate; // w = 1, seq = 1, W = 1
         }
     }
 }
