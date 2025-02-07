@@ -186,8 +186,8 @@ namespace FastMigrations.Runtime
 
         /*
          * Operational complexity (Co) = 16 + 2 + 8 + 1 + 1 = 28
-         * Architectural complexity (Ca) = inputs + outputs + variables = (1+3) + 1 + 0 = 5 (Dictionary as input like a array, so weight equals 3)
-         * Cognitive complexity = Co * Ca = 28 * 5 = 140
+         * Architectural complexity (Ca) = inputs + outputs + variables = (1+3) + 1 + 1 = 6 (Dictionary as input like a array, so weight equals 3)
+         * Cognitive complexity = Co * Ca = 28 * 6 = 168
          */
         private static MigratableAttribute GetMigratableAttribute(Type objectType, IDictionary<Type, MigratableAttribute> cache)
         {
