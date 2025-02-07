@@ -23,9 +23,9 @@ namespace FastMigrations.Runtime
     internal delegate JObject MigrateMethod(JObject data);
 
     /*
-     * Operational complexity (Co) = ???
-     * Architectural complexity (Ca) = inputs + outputs + variables = ???
-     * Cognitive complexity = Co * Ca = ???
+     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 310 482 + 168 + 1 397 = 414 599
+     * Architectural complexity (Ca) = 2 + 3 + 6 + 9 + 9 + 6 + 11 + fields = 46 + 6 = 52
+     * Cognitive complexity = Co * Ca = 414 599 * 52 = 21 559 148
      */
     public class FastMigrationsConverter : JsonConverter
     {
@@ -99,7 +99,7 @@ namespace FastMigrations.Runtime
 
         /*
          * Operational complexity = 12228
-         * Architectural complexity = inputs + outputs + variables = 4 + 1 + 4 + 9
+         * Architectural complexity = inputs + outputs + variables = 4 + 1 + 4 = 9
          * Cognitive complexity = Oc * Ac = 12228 * 9 = 100052
          */
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
