@@ -150,38 +150,38 @@ namespace FastMigrations.Runtime
         }
 
         /*
-         * Operational complexity (Co) = ???
-         * Architectural complexity (Ca) = inputs + outputs + variables = ???
-         * Cognitive complexity = Co * Ca = ???
+         * Operational complexity (Co) = 1 + 514 304 + 1 = 514 306
+         * Architectural complexity (Ca) = inputs + outputs + variables = 5 + 1 + 3 = 9
+         * Cognitive complexity = Co * Ca = 514 306 * 9 = 4 628 754
          */
         private JObject RunMigrations(JObject jObject, Type objectType, int fromVersion,
             uint toVersion, MigratorMissingMethodHandling methodHandling)
         {
-            fromVersion += MigratorConstants.MinVersionToStartMigration;
+            fromVersion += MigratorConstants.MinVersionToStartMigration; // w = 1, seq = 1, W = 1
 
-            for (int currVersion = fromVersion; currVersion <= toVersion; ++currVersion)
+            for (int currVersion = fromVersion; currVersion <= toVersion; ++currVersion) // w = 1, for = 7, W = 7 * (16 + 73 440 + 16) = 514 304
             {
-                var migrationMethod = GetMigrateMethod(objectType, currVersion, _migrateMethodsByType);
+                var migrationMethod = GetMigrateMethod(objectType, currVersion, _migrateMethodsByType); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16 
 
-                if (migrationMethod == null)
+                if (migrationMethod == null) // w = 2, if = 3 * 12 240 = 36 720, W = 2*36 720 = 73 440 
                 {
-                    switch (methodHandling)
+                    switch (methodHandling) // w = 3, switch = 4 * (960+60) = 4 080, W = 3 * 4 080 = 12 240
                     {
-                        case MigratorMissingMethodHandling.ThrowException:
+                        case MigratorMissingMethodHandling.ThrowException: // w = 4, if = 3 * 80 = 240, W = 4 * 240 = 960
                         {
-                            var methodName = string.Format(MigratorConstants.MigrateMethodFormat, currVersion);
-                            throw new MigrationException($"Migration method {methodName} not found in {objectType.Name}");
+                            var methodName = string.Format(MigratorConstants.MigrateMethodFormat, currVersion); // w = 5, seq = 1, func = 7, W = 5*(1+7) = 40
+                            throw new MigrationException($"Migration method {methodName} not found in {objectType.Name}"); // w = 5, seq = 1, func = 7, W = 5*(1+7) = 40
                         }
-                        case MigratorMissingMethodHandling.Ignore:
+                        case MigratorMissingMethodHandling.Ignore: // w = 4, if = 3 * 5 = 15, W = 4 * 15 = 60
                         {
-                            continue;
+                            continue; // w = 5, seq = 1, W = 5
                         }
                     }
                 }
 
-                jObject = migrationMethod(jObject);
+                jObject = migrationMethod(jObject); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
             }
-            return jObject;
+            return jObject; // w = 1, seq = 1, W = 1
         }
 
         /*
