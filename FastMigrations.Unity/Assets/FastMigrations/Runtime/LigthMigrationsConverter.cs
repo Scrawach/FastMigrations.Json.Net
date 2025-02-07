@@ -71,29 +71,29 @@ namespace FastMigrations.Runtime
         }
 
         /*
-         * Operational complexity (Co) = ???
-         * Architectural complexity (Ca) = inputs + outputs + variables = ???
-         * Cognitive complexity = Co * Ca = ???
+         * Operational complexity (Co) = 8 + 384 = 392
+         * Architectural complexity (Ca) = inputs + outputs + variables = 3 + 0 + 3 = 6
+         * Cognitive complexity = Co * Ca = 392 * 6 = 2 352
          */
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            Type valueType = value.GetType();
+            Type valueType = value.GetType(); // w = 1, seq = 1, func = 7, W = 1 + 7 = 8
 
-            try
+            try // w = 1, if = 3 * (112+16), W = 3 * 128 = 384
             {
-                if (_migrationInProgress.Value.Contains(valueType))
-                    return;
+                if (_migrationInProgress.Value.Contains(valueType)) // w = 2, if = 3 * 3 = 9, func = 7, W = 2*(9+7) = 32
+                    return; // w = 3, seq = 1, W = 3
 
-                _migrationInProgress.Value.Add(valueType);
+                _migrationInProgress.Value.Add(valueType); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
 
-                var jObject = JObject.FromObject(value, serializer);
-                var migratableAttribute = GetMigratableAttribute(valueType, _attributeByTypeCache);
-                jObject.Add(MigratorConstants.VersionJsonFieldName, migratableAttribute.Version);
-                jObject.WriteTo(writer);
+                var jObject = JObject.FromObject(value, serializer); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                var migratableAttribute = GetMigratableAttribute(valueType, _attributeByTypeCache); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16 
+                jObject.Add(MigratorConstants.VersionJsonFieldName, migratableAttribute.Version); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                jObject.WriteTo(writer); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
             }
             finally
             {
-                _migrationInProgress.Value.Remove(valueType);
+                _migrationInProgress.Value.Remove(valueType); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
             }
         }
 
