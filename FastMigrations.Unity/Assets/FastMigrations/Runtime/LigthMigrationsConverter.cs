@@ -53,21 +53,21 @@ namespace FastMigrations.Runtime
         }
 
         /*
-         * Operational complexity (Co) = ???
-         * Architectural complexity (Ca) = inputs + outputs + variables = ???
-         * Cognitive complexity = Co * Ca = ???
+         * Operational complexity (Co) = 8 + 6 + 6 + 8 = 28
+         * Architectural complexity (Ca) = inputs + outputs + variables = 1 + 1 + 1 = 3
+         * Cognitive complexity = Co * Ca = 28 * 3 = 84
          */
         public override bool CanConvert(Type objectType)
         {
-            MigratableAttribute attribute = GetMigratableAttribute(objectType, _attributeByTypeCache);
+            MigratableAttribute attribute = GetMigratableAttribute(objectType, _attributeByTypeCache); // w = 1, seq = 1, func = 7, W = 1 + 7 = 8
 
-            if (attribute == null)
-                return false;
+            if (attribute == null) // w = 1, if = 3 * 2, W = 6
+                return false; // w = 2, seq = 1, W = 2
 
-            if (attribute.Version == MigratorConstants.DefaultVersion)
-                return false;
+            if (attribute.Version == MigratorConstants.DefaultVersion) // w = 1, if = 3 * 2, W = 6
+                return false; // w = 2, seq = 1, W = 2
 
-            return !_migrationInProgress.Value.Contains(objectType);
+            return !_migrationInProgress.Value.Contains(objectType); // w = 1, seq = 1, func = 7, W = 1 + 7 = 8
         }
 
         /*
