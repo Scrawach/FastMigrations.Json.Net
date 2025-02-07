@@ -185,18 +185,18 @@ namespace FastMigrations.Runtime
         }
 
         /*
-         * Operational complexity (Co) = ???
-         * Architectural complexity (Ca) = inputs + outputs + variables = ???
-         * Cognitive complexity = Co * Ca = ???
+         * Operational complexity (Co) = 16 + 2 + 8 + 1 + 1 = 28
+         * Architectural complexity (Ca) = inputs + outputs + variables = (1+3) + 1 + 0 = 5 (Dictionary as input like a array, so weight equals 3)
+         * Cognitive complexity = Co * Ca = 28 * 5 = 140
          */
         private static MigratableAttribute GetMigratableAttribute(Type objectType, IDictionary<Type, MigratableAttribute> cache)
         {
-            if (cache.TryGetValue(objectType, out MigratableAttribute attribute))
-                return attribute;
+            if (cache.TryGetValue(objectType, out MigratableAttribute attribute)) // w = 1, if = 3 * 3 = 9, func = 7, W = 9 + 7 = 16
+                return attribute; // w = 2, seq = 1, W = 2 * 1 = 2
 
-            attribute = (MigratableAttribute)objectType.GetCustomAttribute(typeof(MigratableAttribute), false);
-            cache[objectType] = attribute;
-            return attribute;
+            attribute = (MigratableAttribute)objectType.GetCustomAttribute(typeof(MigratableAttribute), false); // w = 1, seq = 1, func = 7, W = 1 + 7 = 8
+            cache[objectType] = attribute; // w = 1, seq = 1, 1
+            return attribute; // w = 1, seq = 1, 1
         }
 
         /*
