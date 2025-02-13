@@ -23,9 +23,9 @@ namespace FastMigrations.Runtime
     internal delegate JObject MigrateMethod(JObject data);
 
     /*
-     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 310 482 + 168 + 1 397 = 414 599
-     * Architectural complexity (Ca) = 2 + 3 + 6 + 9 + 9 + 6 + 11 + fields = 46 + 6 = 52
-     * Cognitive complexity = Co * Ca = 414 599 * 52 = 21 559 148
+     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 798 + 930 + 168 + 1 397 = 105 845
+     * Architectural complexity (Ca) = 2 + 3 + 6 + 9 + 6 + 7 + 6 + 11 + fields = 46 + 6 = 56
+     * Cognitive complexity = Co * Ca = 105 845 * 56 = 5 927 320
      */
     public class FastMigrationsConverter : JsonConverter
     {
@@ -73,7 +73,7 @@ namespace FastMigrations.Runtime
         /*
          * Operational complexity (Co) = 8 + 384 = 392
          * Architectural complexity (Ca) = inputs + outputs + variables = 3 + 0 + 3 = 6
-         * Cognitive complexity = Co * Ca = 392 * 6 = 2 352
+         * Cognitive complexity = Co * Ca = 392 * 6 = 2 352
          */
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
@@ -150,38 +150,49 @@ namespace FastMigrations.Runtime
         }
 
         /*
-         * Operational complexity (Co) = 1 + 34 496 + 1 = 34 498
-         * Architectural complexity (Ca) = inputs + outputs + variables = 5 + 1 + 3 = 9
-         * Cognitive complexity = Co * Ca = 34 498 * 9 = 310 482
+         * Operational complexity (Co) = 1 + 112 + 1 = 114
+         * Architectural complexity (Ca) = inputs + outputs + variables = 5 + 1 + 1 = 7
+         * Cognitive complexity = Co * Ca = 114 * 7 = 798
          */
         private JObject RunMigrations(JObject jObject, Type objectType, int fromVersion,
             uint toVersion, MigratorMissingMethodHandling methodHandling)
         {
             fromVersion += MigratorConstants.MinVersionToStartMigration; // w = 1, seq = 1, W = 1
 
-            for (int currVersion = fromVersion; currVersion <= toVersion; ++currVersion) // w = 1, for = 7, W = 7 * (16 + 4 896  + 16) = 34 496
+            for (int currVersion = fromVersion; currVersion <= toVersion; ++currVersion) // w = 1, for = 7, W = 7 * (16) = 112
             {
-                var migrationMethod = GetMigrateMethod(objectType, currVersion, _migrateMethodsByType); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16 
-
-                if (migrationMethod == null) // w = 2, if = 3 * 816 = 2 448, W = 2*2 448 = 4 896 
-                {
-                    switch (methodHandling) // w = 3, switch = 4 * (32+32+4) = 4 * 68 = 272, W = 3 * 272 = 816
-                    {
-                        case MigratorMissingMethodHandling.ThrowException: 
-                        {
-                            var methodName = string.Format(MigratorConstants.MigrateMethodFormat, currVersion); // w = 4, seq = 1, func = 7, W = 4*(1+7) = 32
-                            throw new MigrationException($"Migration method {methodName} not found in {objectType.Name}"); // w = 4, seq = 1, func = 7, W = 4*(1+7) = 32
-                        }
-                        case MigratorMissingMethodHandling.Ignore: 
-                        {
-                            continue; // w = 4, seq = 1, W = 4
-                        }
-                    }
-                }
-
-                jObject = migrationMethod(jObject); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                jObject = Migrate(jObject, methodHandling, objectType, currVersion); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
             }
+            
             return jObject; // w = 1, seq = 1, W = 1
+        }
+        
+        /*
+         * Operational complexity (Co) = 8 + 3 + 136 + 8 = 155
+         * Architectural complexity (Ca) = inputs + outputs + variables = 4 + 1 + 1 = 6
+         * Cognitive complexity = Co * Ca = 155 * 6 = 930
+         */
+        private JObject Migrate(JObject baseJObject, MigratorMissingMethodHandling methodHandling, Type objectType, int version)
+        {
+            var migrationMethod = GetMigrateMethod(objectType, version, _migrateMethodsByType); // w = 1, seq = 1, func = 7, W = (1+7) = 8
+
+            if (migrationMethod != null) // w = 1, if = 3, W = 3
+                return baseJObject; // seq = 1, W = 1
+
+            switch (methodHandling) // w = 1, switch = 4 * (32+2) = 4 * 34 = 136, W = 136
+            {
+                case MigratorMissingMethodHandling.ThrowException: 
+                {
+                    var methodName = string.Format(MigratorConstants.MigrateMethodFormat, version); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                    throw new MigrationException($"Migration method {methodName} not found in {objectType.Name}"); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                }
+                case MigratorMissingMethodHandling.Ignore: 
+                {
+                    return baseJObject; // w = 2, seq = 1, W = 2
+                }
+            }
+            
+            return migrationMethod(baseJObject); // w = 1, seq = 1, func = 7, W = 1+7 = 8
         }
 
         /*
@@ -202,7 +213,7 @@ namespace FastMigrations.Runtime
         /*
          * Operational complexity (Co) = 61 + 13 + 8 + 8 + 13 + 22 + 1 + 1 = 127
          * Architectural complexity (Ca) = inputs + outputs + variables = 5 + 1 + 5 = 11 (dict as collection or array equal 3)
-         * Cognitive complexity = Co * Ca = 127 * 11 = 1 397
+         * Cognitive complexity = Co * Ca = 127 * 11 = 1 397
          */
         private static MigrateMethod GetMigrateMethod(Type objectType, int version, IDictionary<Type, IDictionary<int, MigrateMethod>> cache)
         {
