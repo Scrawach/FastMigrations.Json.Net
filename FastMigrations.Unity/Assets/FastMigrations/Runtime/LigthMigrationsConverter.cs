@@ -23,9 +23,9 @@ namespace FastMigrations.Runtime
     internal delegate JObject MigrateMethod(JObject data);
 
     /*
-     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 798 + 930 + 168 + 1 397 = 105 845
+     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 798 + 1248 + 168 + 1 397 = 106 163
      * Architectural complexity (Ca) = 2 + 3 + 6 + 9 + 6 + 7 + 6 + 11 + fields = 46 + 6 = 56
-     * Cognitive complexity = Co * Ca = 105 845 * 56 = 5 927 320
+     * Cognitive complexity = Co * Ca = 106 163 * 56 = 5 945 128
      */
     public class FastMigrationsConverter : JsonConverter
     {
@@ -168,16 +168,16 @@ namespace FastMigrations.Runtime
         }
         
         /*
-         * Operational complexity (Co) = 8 + 3 + 136 + 8 = 155
+         * Operational complexity (Co) = 8 + 48 + 136 + 16 =  208
          * Architectural complexity (Ca) = inputs + outputs + variables = 4 + 1 + 1 = 6
-         * Cognitive complexity = Co * Ca = 155 * 6 = 930
+         * Cognitive complexity = Co * Ca = 208 * 6 = 1248
          */
         private JObject Migrate(JObject baseJObject, MigratorMissingMethodHandling methodHandling, Type objectType, int version)
         {
             var migrationMethod = GetMigrateMethod(objectType, version, _migrateMethodsByType); // w = 1, seq = 1, func = 7, W = (1+7) = 8
 
-            if (migrationMethod != null) // w = 1, if = 3, W = 3
-                return baseJObject; // seq = 1, W = 1
+            if (migrationMethod != null) // w = 1, if = 3 * 16 = 48, W = 48 
+                return migrationMethod(baseJObject); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
 
             switch (methodHandling) // w = 1, switch = 4 * (32+2) = 4 * 34 = 136, W = 136
             {
@@ -190,9 +190,11 @@ namespace FastMigrations.Runtime
                 {
                     return baseJObject; // w = 2, seq = 1, W = 2
                 }
+                default:
+                {
+                    throw new ArgumentOutOfRangeException(nameof(methodHandling), methodHandling, null); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
+                }
             }
-            
-            return migrationMethod(baseJObject); // w = 1, seq = 1, func = 7, W = 1+7 = 8
         }
 
         /*
