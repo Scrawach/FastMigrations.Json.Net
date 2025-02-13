@@ -23,9 +23,9 @@ namespace FastMigrations.Runtime
     internal delegate JObject MigrateMethod(JObject data);
 
     /*
-     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 798 + 1248 + 168 + 1 397 = 106 163
+     * Operational complexity (Co) = 64 + 84 + 2 352 + 100 052 + 798 + 1 536 + 168 + 1 397 = 106 451
      * Architectural complexity (Ca) = 2 + 3 + 6 + 9 + 6 + 7 + 6 + 11 + fields = 46 + 6 = 56
-     * Cognitive complexity = Co * Ca = 106 163 * 56 = 5 945 128
+     * Cognitive complexity = Co * Ca = 106 451 * 56 = 5 961 256
      */
     public class FastMigrationsConverter : JsonConverter
     {
@@ -168,9 +168,9 @@ namespace FastMigrations.Runtime
         }
         
         /*
-         * Operational complexity (Co) = 8 + 48 + 136 + 16 =  208
+         * Operational complexity (Co) = 8 + 48 + 200 = 256
          * Architectural complexity (Ca) = inputs + outputs + variables = 4 + 1 + 1 = 6
-         * Cognitive complexity = Co * Ca = 208 * 6 = 1248
+         * Cognitive complexity = Co * Ca = 256 * 6 = 1 536
          */
         private JObject Migrate(JObject baseJObject, MigratorMissingMethodHandling methodHandling, Type objectType, int version)
         {
@@ -179,7 +179,7 @@ namespace FastMigrations.Runtime
             if (migrationMethod != null) // w = 1, if = 3 * 16 = 48, W = 48 
                 return migrationMethod(baseJObject); // w = 2, seq = 1, func = 7, W = 2*(1+7) = 16
 
-            switch (methodHandling) // w = 1, switch = 4 * (32+2) = 4 * 34 = 136, W = 136
+            switch (methodHandling) // w = 1, switch = 4 * (32+2+16) = 4 * 50 = 200, W = 200
             {
                 case MigratorMissingMethodHandling.ThrowException: 
                 {
